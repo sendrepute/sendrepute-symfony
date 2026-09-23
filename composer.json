@@ -1,0 +1,48 @@
+{
+    "name": "sendrepute/symfony",
+    "version": "0.1.1",
+    "description": "Explicit opt-in paid SendRepute pre-send classification for Symfony Mailer",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "homepage": "https://www.sendrepute.com",
+    "require": {
+        "php": "^8.1",
+        "symfony/config": "^6.4 || ^7.4",
+        "symfony/dependency-injection": "^6.4 || ^7.4",
+        "symfony/framework-bundle": "^6.4 || ^7.4",
+        "symfony/http-client": "^6.4 || ^7.4",
+        "symfony/mailer": "^6.4 || ^7.4",
+        "symfony/mime": "^6.4 || ^7.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5 || ^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "SendRepute\\Symfony\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SendRepute\\Symfony\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": [
+            "phpunit",
+            "@test:normalizer"
+        ],
+        "test:normalizer": "node --no-warnings --experimental-strip-types tests/normalizer-bridge.ts",
+        "lint": "find src tests scripts -name '*.php' -print0 | xargs -0 -n1 php -l",
+        "package": "php scripts/package.php dist/sendrepute-symfony-0.1.1.zip"
+    },
+    "config": {
+        "allow-plugins": {},
+        "sort-packages": true
+    },
+    "extra": {
+        "symfony": {
+            "require": "6.4.* || 7.4.*"
+        }
+    }
+}
