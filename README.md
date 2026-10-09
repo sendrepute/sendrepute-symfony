@@ -1,5 +1,11 @@
 # SendRepute Symfony Mailer adapter
 
+## Control panel preview
+
+![SendRepute Symfony console](https://raw.githubusercontent.com/sendrepute/sendrepute-symfony/main/docs/screenshots/dashboard.webp)
+
+The shipped integration console in a local framework host with sample data, not a live customer account. See `docs/screenshots/dashboard.provenance.json` for capture details.
+
 `sendrepute/symfony` 0.1.1 is a standalone Symfony bundle that can inspect an
 explicitly opted-in `Email` at Symfony Mailer's official pre-send
 `MessageEvent`. It calls the paid SendRepute customer classifier; it never
