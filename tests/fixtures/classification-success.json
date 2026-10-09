@@ -1,0 +1,24 @@
+{
+    "requestId": "req_fixture_1",
+    "model": "thor",
+    "result": {
+        "label": "spam",
+        "spamProbability": 0.91,
+        "confidence": "high",
+        "reasons": [
+            {
+                "signal": "fixture",
+                "detail": "Typed fixture reason",
+                "weight": 0.5
+            }
+        ],
+        "flaggedTerms": [],
+        "analyzedFields": ["sender", "subject", "body"],
+        "modelVersion": "fixture",
+        "analyzedAt": "2026-01-01T00:00:00.000Z"
+    },
+    "billing": {
+        "replayed": false,
+        "chargedMillicents": 5
+    }
+}

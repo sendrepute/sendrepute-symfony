@@ -1,5 +1,3 @@
-> **Standalone source distribution:** this repository contains the integration runtime, documentation, and source packager. Upstream workspace/CMS/production-normalizer regression suites are deliberately not distributed here because they depend on private server code or isolated platform fixtures. Testing commands and historical verification evidence below describe upstream maintainer validation, not a self-contained test suite in this source-only checkout. No third-party registry publication is implied.
-
 # SendRepute Symfony Mailer adapter
 
 `sendrepute/symfony` 0.1.1 is a standalone Symfony bundle that can inspect an
@@ -107,3 +105,56 @@ are the entire compatibility claim.
 Build the deterministic source-only archive with `composer package`. Its closed
 allowlist excludes tests, dependencies, caches, local environment files, and
 credentials.
+## Customer API client and operator console
+
+The `SendRepute\Symfony\CustomerApi\CustomerApiClient` service covers all 49 customer API operations, including paid-result recovery. It uses the bundle's `HttpClientInterface`.
+
+Its safeguards:
+
+- It uses one fixed HTTPS origin.
+- It never retries a request, refuses redirects and caps response size.
+- Parameters and body fields must match the contract, and bodies are limited to 512 KiB.
+- Paid operations require an explicit `paidConsent` price.
+- Billing and recovery actions require `confirm`.
+
+```yaml
+send_repute:
+  customer_api:
+    api_key: '%env(SENDREPUTE_CUSTOMER_API_KEY)%'
+    console:
+      enabled: true
+      handoff_return_origin: null   # exact https origin to enable hosted handoff
+```
+
+Import the routes behind your firewall:
+
+```yaml
+sendrepute_customer_api:
+  resource: '@SendReputeBundle/config/routes/customer_api.php'
+  prefix: /admin/sendrepute
+```
+
+Access is denied by default: `ConsoleAuthorizer` is aliased to `DenyAllConsoleAuthorizer`. To grant access, alias it to your own implementation, for example one that calls `Security::isGranted('ROLE_ADMIN')`.
+
+Console safeguards:
+
+- It requires a session-bound CSRF token in `X-CSRF-Token` and a same-origin `Origin` header.
+- A paid operation needs its quote operation to have run in the same session within the last 15 minutes. That quote is used up by the paid call.
+- Only one paid or billing call can be in flight per session.
+- The API key is never sent to the browser.
+
+The mail subscriber is unchanged.
+
+## Paid-intent ledger (anti-duplicate)
+
+Every paid or billing console call is recorded in a durable intent ledger **before** the request is sent. The identity is the credential fingerprint, operation, method, path and canonical body. An identical request is refused (409 `INTENT_LOCKED` / `INTENT_COMPLETED`) from any session, worker or restart while the intent is pending, ambiguous (timeout, transport error, 5xx, 408/425, malformed response) or completed. Definitive 4xx refusals unlock it. The upstream replay identity (`recoveryId`, or `analysisId`) is generated once, persisted with the intent and reused on resend, so the server can deduplicate. Operators review intents with the **Paid intents** button and release one only with a reason and an explicit confirmation. Releasing a completed intent issues a fresh replay id for a deliberate second charge. Pending intents are never released online or by timeout, because a stalled worker may still have the request in flight. After a worker crash, stop every worker and run `$store->recoverPendingAfterShutdown(true, time())`; leftover pending intents become ambiguous for reconciliation and release. With no ledger configured, paid and billing operations return 503 `INTENT_STORE_REQUIRED`. The filesystem store supports a **single host only**, and it refuses to start unless you acknowledge that and its directory is absolute, `0700` and owned by the server user. Prices are always sent upstream for server-side enforcement, and a charge above consent is flagged. Classification (`classifyCustomerEmail`, POST /v1/classify) sends `priceAuthorization` with the four effective rates returned by this session's latest GET /v1/pricing plus the operator's ceiling. A confirmation that no longer matches the latest rates is refused (409 `PRICE_CONFIRMATION_STALE`) before anything is sent. The server re-checks rates and ceiling atomically at settlement (409 `PRICE_CHANGED`, no debit). Manual edit reclassification (`customerClassifyEmail`, POST /v1/classify/edit) has no price field in its request schema (`CustomerManualEditInput`, additionalProperties false); the server prices it authoritatively.
+
+```yaml
+send_repute:
+  customer_api:
+    console:
+      intent_store:
+        path: "%kernel.project_dir%/var/sendrepute-intents"   # single host only
+        single_host: true
+        # service: app.my_shared_intent_ledger   # custom IntentLedger for multi-host
+```

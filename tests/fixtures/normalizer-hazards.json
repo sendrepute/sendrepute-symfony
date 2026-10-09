@@ -1,0 +1,22 @@
+[
+    {
+        "name": "CSS brace deletion",
+        "body": "benign { spam offer malicious } tail",
+        "normalized": "tail"
+    },
+    {
+        "name": "quoted-printable decode",
+        "body": "safe=20<style>spam offer</style> tail",
+        "normalized": "safe tail"
+    },
+    {
+        "name": "global base64 decode",
+        "body": "PHN0eWxlPnNwYW0gb2ZmZXIgc3BhbSBvZmZlciBzcGFtIG9mZmVyIHNwYW0gb2ZmZXIgc3BhbSBvZmZlciBzcGFtIG9mZmVyIHNwYW0gb2ZmZXIgc3BhbSBvZmZlciBzcGFtIG9mZmVyIHNwYW0gb2ZmZXIgc3BhbSBvZmZlciBzcGFtIG9mZmVyIDwvc3R5bGU+",
+        "normalized": ""
+    },
+    {
+        "name": "MIME base64 decode",
+        "body": "Content-Transfer-Encoding: base64\r\n\r\nPHN0eWxlPnNwYW0gb2ZmZXIgc3BhbSBvZmZlciBzcGFtIG9mZmVyIHNwYW0gb2ZmZXIgc3BhbSBvZmZlciBzcGFtIG9mZmVyIHNwYW0gb2ZmZXIgc3BhbSBvZmZlciBzcGFtIG9mZmVyIHNwYW0gb2ZmZXIgc3BhbSBvZmZlciBzcGFtIG9mZmVyIDwvc3R5bGU+",
+        "normalized": "Content-Transfer-Encoding: base64"
+    }
+]

@@ -13,12 +13,13 @@ if (!class_exists(ZipArchive::class)) {
     exit(2);
 }
 
-$files = ['composer.json', 'LICENSE', 'README.md', 'SECURITY.md', 'config/services.php'];
+$files = ['composer.json', 'LICENSE', 'README.md', 'SECURITY.md', 'config/services.php', 'config/routes/customer_api.php'];
 $source = new RecursiveIteratorIterator(
     new RecursiveDirectoryIterator($root.'/src', FilesystemIterator::SKIP_DOTS),
 );
 foreach ($source as $file) {
-    if (!$file->isFile() || $file->isLink() || $file->getExtension() !== 'php') {
+    $customerApiResource = preg_match('#/src/CustomerApi/resources/(customer-api-operations\.json|admin-ui\.html)\z#', str_replace('\\', '/', $file->getPathname())) === 1;
+    if (!$file->isFile() || $file->isLink() || ($file->getExtension() !== 'php' && !$customerApiResource)) {
         fwrite(STDERR, "Refusing unexpected source entry.\n");
         exit(1);
     }
